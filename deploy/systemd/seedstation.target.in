@@ -1,0 +1,7 @@
+[Unit]
+Description=SeedStation torrent download and LAN file server
+After=network-online.target
+Wants=network-online.target seedstation-qbittorrent.service seedstation-web.service seedstation-mdns.service
+
+[Install]
+WantedBy=default.target

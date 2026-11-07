@@ -1,0 +1,20 @@
+[Unit]
+Description=SeedStation qBittorrent engine (isolated profile)
+After=network-online.target
+Wants=network-online.target
+PartOf=seedstation.target
+
+[Service]
+Type=simple
+WorkingDirectory=@ROOT@
+Environment="HOME=@HOME@"
+ExecStart="@QBIT_BIN@" --profile="@ROOT@/.qbittorrent" --webui-port=@QBIT_PORT@ --torrenting-port=@TORRENT_PORT@ --confirm-legal-notice
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=seedstation.target

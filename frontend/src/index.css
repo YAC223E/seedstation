@@ -1,0 +1,422 @@
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/jetbrains-mono";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-seeding: var(--seeding);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 7px;
+  --radius-lg: 11px;
+  --radius-xl: 16px;
+
+  --shadow-float: 0 18px 55px -18px rgb(0 0 0 / 0.5);
+}
+
+:root {
+  color-scheme: light;
+  --background: #edefe3;
+  --surface: #f7f8ef;
+  --raised: #ffffff;
+  --foreground: #172015;
+  --muted: #5d6954;
+  --faint: #5b6652;
+  --line: #d2d7c5;
+  --line-strong: #b6bfaa;
+  --primary: #53680b;
+  --primary-foreground: #f8fae9;
+  --seeding: #2f6c50;
+  --warning: #8b6414;
+  --danger: #a9372a;
+  --info: #2b6273;
+  --wash: #e4e8d6;
+  --selection: #dce9a4;
+  --grid: rgb(71 84 58 / 0.08);
+  --halo: rgb(126 157 38 / 0.15);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0a0e09;
+  --surface: #10150e;
+  --raised: #151c12;
+  --foreground: #edf0e2;
+  --muted: #a0aa94;
+  --faint: #7b8772;
+  --line: #293223;
+  --line-strong: #3c4935;
+  --primary: #d7f26a;
+  --primary-foreground: #121707;
+  --seeding: #8ed3aa;
+  --warning: #e6ca7f;
+  --danger: #ff9587;
+  --info: #9bc9d5;
+  --wash: #182013;
+  --selection: #35450f;
+  --grid: rgb(177 200 142 / 0.045);
+  --halo: rgb(148 185 48 / 0.11);
+}
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    min-width: 320px;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+    margin: 0;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01" 1, "cv11" 1;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--selection);
+    color: var(--foreground);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a,
+  [role="button"] {
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* iOS Safari zooms the page when a focused control has a font size below
+     16px. The control primitives opt into 16px on small screens. */
+  @media (max-width: 639px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border: 3px solid var(--background);
+    border-radius: 999px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  .page-shell {
+    min-height: calc(100dvh - 4rem);
+    animation: page-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+  }
+
+  .panel-raised {
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+  }
+
+  .hairline {
+    border-color: var(--line);
+  }
+
+  .micro {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.3;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .data {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  .blueprint-grid {
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  .signal-glow {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent),
+      0 0 36px color-mix(in srgb, var(--primary) 8%, transparent);
+  }
+
+  .link-quiet {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--faint) 45%, transparent);
+    text-underline-offset: 0.25em;
+    transition: color 160ms ease, text-decoration-color 160ms ease;
+  }
+
+  .link-quiet:hover {
+    color: var(--foreground);
+    text-decoration-color: var(--primary);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-top {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  /*
+   * Centre dialogs exactly once. The dialog-in keyframes used to repeat the
+   * -50%/-50% translation in `transform` while Tailwind already applied it via
+   * the `translate` property, shifting every dialog a full width off-screen.
+   * Keep translation here and animate only opacity/scale.
+   */
+  .dialog-content {
+    translate: -50% -50%;
+  }
+
+  .grain {
+    position: relative;
+  }
+
+  .grain::after {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    pointer-events: none;
+    opacity: 0.025;
+    content: "";
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 10%, transparent);
+    animation: breathe 2.8s ease-in-out infinite;
+  }
+
+  .live-dot[data-offline="true"] {
+    background: var(--danger);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 10%, transparent);
+    animation: none;
+  }
+}
+
+@layer utilities {
+  .text-2xs {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+  }
+
+  .pb-safe-nav {
+    padding-bottom: calc(5.25rem + env(safe-area-inset-bottom));
+  }
+
+  .bg-checker {
+    background-color: var(--wash);
+    background-image:
+      linear-gradient(45deg, color-mix(in srgb, var(--line) 50%, transparent) 25%, transparent 25%),
+      linear-gradient(-45deg, color-mix(in srgb, var(--line) 50%, transparent) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--line) 50%, transparent) 75%),
+      linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--line) 50%, transparent) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes dash-drift {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    scale: 0.985;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dialog-overlay[data-state="open"] {
+  animation: overlay-in 180ms ease-out both;
+}
+
+.dialog-overlay[data-state="closed"] {
+  animation: overlay-in 130ms ease-in reverse both;
+}
+
+.dialog-content[data-state="open"] {
+  animation: dialog-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dialog-content[data-state="closed"] {
+  animation: dialog-in 140ms ease-in reverse both;
+}
+
+.sheet-content[data-state="open"] {
+  animation: sheet-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sheet-content[data-state="closed"] {
+  animation: sheet-in 160ms ease-in reverse both;
+}
+
+.menu-content[data-state="open"],
+[data-radix-popper-content-wrapper] .menu-content[data-state="open"] {
+  animation: menu-in 140ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
