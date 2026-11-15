@@ -11,4 +11,9 @@ urlpatterns = [
     path("torrents/<str:torrent_hash>/pause/", views.TorrentPauseView.as_view(), name="torrent-pause"),
     path("torrents/<str:torrent_hash>/resume/", views.TorrentResumeView.as_view(), name="torrent-resume"),
     path("torrents/<str:torrent_hash>/recheck/", views.TorrentRecheckView.as_view(), name="torrent-recheck"),
+    path(
+        "torrents/<str:torrent_hash>/files/priority/",
+        views.TorrentFilePriorityView.as_view(),
+        name="torrent-file-priority",
+    ),
 ]

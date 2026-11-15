@@ -1,10 +1,13 @@
 import {
   Check,
+  ChevronDown,
   Copy,
   FolderOpen,
   Pause,
   Play,
   RefreshCw,
+  Square,
+  SquareCheck,
   Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -15,6 +18,14 @@ import { ErrorState } from "@/components/common/states";
 import { TorrentStatus } from "@/components/common/torrent-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import {
   Sheet,
@@ -23,7 +34,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTorrentDetail } from "@/hooks/use-api";
+import {
+  useSetTorrentFilePriority,
+  useTorrentDetail,
+  type TorrentFilePriority,
+} from "@/hooks/use-api";
 import {
   formatBytes,
   formatDateTime,
@@ -46,6 +61,20 @@ function fileCategory(file: TorrentFile): FileCategory {
   if (file.mime.startsWith("text/")) return "text";
   if (file.mime.includes("pdf") || file.mime.includes("epub")) return "document";
   return "other";
+}
+
+const FILE_PRIORITY_LABELS: Record<TorrentFilePriority, string> = {
+  normal: "Normal",
+  high: "High",
+  max: "Max",
+  skip: "Skip",
+};
+
+function filePriority(priority: number): TorrentFilePriority {
+  if (priority === 0) return "skip";
+  if (priority === 6) return "high";
+  if (priority === 7) return "max";
+  return "normal";
 }
 
 function trackerName(url: string) {
@@ -92,8 +121,21 @@ export function TorrentDetailSheet({
   onOpenFiles: (path: string) => void;
 }) {
   const detail = useTorrentDetail(hash);
+  const priorityMutation = useSetTorrentFilePriority(hash);
   const [tab, setTab] = useState<"files" | "trackers">("files");
   const [copied, setCopied] = useState(false);
+
+  const changePriority = (file: TorrentFile, priority: TorrentFilePriority) => {
+    priorityMutation.mutate(
+      { indexes: [file.index], priority },
+      {
+        onError: (error) =>
+          toast.error(
+            error instanceof Error ? error.message : "The priority could not be changed.",
+          ),
+      },
+    );
+  };
 
   useEffect(() => {
     setTab("files");
@@ -322,14 +364,37 @@ export function TorrentDetailSheet({
                     <ul className="divide-y divide-line">
                       {detail.data.files.map((file) => {
                         const complete = file.progress >= 0.999;
+                        const priority = filePriority(file.priority);
+                        const skipped = priority === "skip";
+                        const canChoose = !torrent.is_complete;
                         return (
                           <li key={file.index} className="flex items-start gap-3 py-3">
-                            <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded border border-line bg-background/40">
-                              <FileTypeIcon
-                                category={fileCategory(file)}
-                                className="size-3.5"
-                              />
-                            </span>
+                            {canChoose ? (
+                              <button
+                                type="button"
+                                role="checkbox"
+                                aria-checked={!skipped}
+                                aria-label={`${skipped ? "Download" : "Skip"} ${file.name}`}
+                                onClick={() =>
+                                  changePriority(file, skipped ? "normal" : "skip")
+                                }
+                                disabled={priorityMutation.isPending}
+                                className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-md border border-line bg-background/40 text-faint transition-colors hover:border-line-strong hover:text-foreground disabled:opacity-50 pointer-fine:size-7"
+                              >
+                                {skipped ? (
+                                  <Square className="size-3.5" />
+                                ) : (
+                                  <SquareCheck className="size-3.5 text-primary" />
+                                )}
+                              </button>
+                            ) : (
+                              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded border border-line bg-background/40">
+                                <FileTypeIcon
+                                  category={fileCategory(file)}
+                                  className="size-3.5"
+                                />
+                              </span>
+                            )}
                             <div className="min-w-0 flex-1">
                               <p
                                 className="truncate text-xs text-foreground"
@@ -354,6 +419,40 @@ export function TorrentDetailSheet({
                                   : ""}
                               </p>
                             </div>
+                            {canChoose ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    type="button"
+                                    disabled={priorityMutation.isPending}
+                                    aria-label={`Priority for ${file.name}`}
+                                    className="mt-0.5 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md border border-line bg-background/40 px-2.5 text-2xs text-muted transition-colors hover:border-line-strong hover:text-foreground disabled:opacity-50 pointer-fine:min-h-8"
+                                  >
+                                    {FILE_PRIORITY_LABELS[priority]}
+                                    <ChevronDown className="size-3 text-faint" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-44">
+                                  <DropdownMenuLabel>Download priority</DropdownMenuLabel>
+                                  {(["normal", "high", "max"] as const).map((option) => (
+                                    <DropdownMenuCheckboxItem
+                                      key={option}
+                                      checked={priority === option}
+                                      onSelect={() => changePriority(file, option)}
+                                    >
+                                      {FILE_PRIORITY_LABELS[option]}
+                                    </DropdownMenuCheckboxItem>
+                                  ))}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuCheckboxItem
+                                    checked={skipped}
+                                    onSelect={() => changePriority(file, "skip")}
+                                  >
+                                    Don't download
+                                  </DropdownMenuCheckboxItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : null}
                           </li>
                         );
                       })}

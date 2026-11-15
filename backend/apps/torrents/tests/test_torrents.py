@@ -94,6 +94,42 @@ def test_pause_resume_recheck(auth_client, monkeypatch):
     ]
 
 
+def test_file_priority_endpoint_maps_values(auth_client, monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "apps.torrents.views.engine.set_file_priority",
+        lambda torrent_hash, indexes, priority: calls.append(
+            (torrent_hash, indexes, priority)
+        ),
+    )
+    response = auth_client.post(
+        f"/api/torrents/{VALID_HASH}/files/priority/",
+        data=json.dumps({"indexes": [1, 3], "priority": "max"}),
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+    assert calls == [(VALID_HASH, [1, 3], 7)]
+
+
+def test_file_priority_rejects_bad_input(auth_client, monkeypatch):
+    called = []
+    monkeypatch.setattr(
+        "apps.torrents.views.engine.set_file_priority",
+        lambda *args: called.append(args),
+    )
+    for payload in (
+        {"indexes": [], "priority": "normal"},
+        {"indexes": [1], "priority": "medium"},
+    ):
+        response = auth_client.post(
+            f"/api/torrents/{VALID_HASH}/files/priority/",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+    assert called == []
+
+
 def test_delete_requires_delete_confirmation(auth_client, monkeypatch):
     called = []
     monkeypatch.setattr(

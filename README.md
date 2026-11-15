@@ -41,6 +41,7 @@ good on a phone at 2 a.m.
 - **Dashboard** with real transfer speeds, queue counts, storage, recent files,
   and telemetry history charts.
 - **Downloads** with magnet links and `.torrent` uploads, pause/resume, recheck,
+  per-file selection and Normal/High/Max priorities inside multi-file torrents,
   filtering, sorting, and confirmed deletion (optionally with files).
 - **File manager** over explicitly allow-listed download directories: browse,
   text/PDF/image/video/audio previews, downloads, folder ZIP archives, and
@@ -463,7 +464,8 @@ All endpoints are authenticated unless noted.
 - `GET /api/live/`, `GET /api/dashboard/summary/`, `GET /api/dashboard/history/`
 - `GET /api/torrents/`, `POST /api/torrents/add-magnet/`,
   `POST /api/torrents/upload/`
-- `GET/DELETE /api/torrents/<hash>/`, plus `pause/`, `resume/`, `recheck/`
+- `GET/DELETE /api/torrents/<hash>/`, plus `pause/`, `resume/`, `recheck/`,
+  and `files/priority/`
 - `GET /api/files/`, `GET /api/files/roots/`, `GET /api/files/download/`,
   `GET /api/files/archive/`, `GET /api/files/text/`, `POST /api/files/delete/`
 - `WS /ws/live/` — live snapshots

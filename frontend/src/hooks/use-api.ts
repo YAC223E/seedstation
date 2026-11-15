@@ -76,6 +76,28 @@ export function useTorrentDetail(hash: string | null) {
   });
 }
 
+export type TorrentFilePriority = "skip" | "normal" | "high" | "max";
+
+export function useSetTorrentFilePriority(hash: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      indexes,
+      priority,
+    }: {
+      indexes: number[];
+      priority: TorrentFilePriority;
+    }) =>
+      apiFetch<{ detail: string }>(`/api/torrents/${hash}/files/priority/`, {
+        method: "POST",
+        body: { indexes, priority },
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["torrent", hash] });
+    },
+  });
+}
+
 export function useTextPreview(path: string | null) {
   return useQuery({
     queryKey: ["file-text", path],

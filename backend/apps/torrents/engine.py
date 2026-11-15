@@ -29,6 +29,9 @@ CHECKING_STATES = {"checkingUP", "checkingDL", "checkingResumeData", "moving", "
 DOWNLOADING_STATES = {"downloading", "forcedDL", "stalledDL", "queuedDL", "metaDL", "forcedMetaDL"}
 SEEDING_STATES = {"uploading", "forcedUP", "stalledUP", "queuedUP"}
 
+# qBittorrent file priority values from its Web API.
+FILE_PRIORITIES = {"skip": 0, "normal": 1, "high": 6, "max": 7}
+
 STATUS_LABELS = {
     "error": "Error",
     "missingFiles": "Missing files",
@@ -510,6 +513,14 @@ def resume_torrent(torrent_hash: str) -> None:
 
 def recheck_torrent(torrent_hash: str) -> None:
     _execute(lambda client: client.torrents_recheck(torrent_hashes=torrent_hash))
+
+
+def set_file_priority(torrent_hash: str, file_indexes: list[int], priority: int) -> None:
+    _execute(
+        lambda client: client.torrents_file_priority(
+            torrent_hash=torrent_hash, file_ids=file_indexes, priority=priority
+        )
+    )
 
 
 def delete_torrent(torrent_hash: str, delete_files: bool) -> None:

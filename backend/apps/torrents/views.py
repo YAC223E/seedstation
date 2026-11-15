@@ -55,6 +55,13 @@ class DeleteSerializer(serializers.Serializer):
     delete_files = serializers.BooleanField(default=False)
 
 
+class FilePrioritySerializer(serializers.Serializer):
+    indexes = serializers.ListField(
+        child=serializers.IntegerField(min_value=0), allow_empty=False, max_length=10000
+    )
+    priority = serializers.ChoiceField(choices=list(engine.FILE_PRIORITIES))
+
+
 class TorrentListView(APIView):
     def get(self, request):
         try:
@@ -194,6 +201,29 @@ class TorrentRecheckView(APIView):
         except EngineError as exc:
             return _engine_response(exc)
         return Response({"detail": "Torrent queued for recheck.", "hash": torrent_hash})
+
+
+class TorrentFilePriorityView(APIView):
+    def post(self, request, torrent_hash: str):
+        serializer = FilePrioritySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        torrent_hash = safe_hash(torrent_hash)
+        priority = serializer.validated_data["priority"]
+        try:
+            engine.set_file_priority(
+                torrent_hash,
+                serializer.validated_data["indexes"],
+                engine.FILE_PRIORITIES[priority],
+            )
+        except EngineError as exc:
+            return _engine_response(exc)
+        return Response(
+            {
+                "detail": "File priorities updated.",
+                "hash": torrent_hash,
+                "priority": priority,
+            }
+        )
 
 
 class LiveView(APIView):
