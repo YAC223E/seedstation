@@ -11,7 +11,7 @@ was built and tested against.
 | Language (server) | Python | 3.14.8 (project requires 3.12+) |
 | Web framework | Django | 6.1.3 |
 | API | Django REST Framework | 3.18.3 |
-| ASGI server | Daphne | 4.2.3 |
+| ASGI server | Uvicorn | 0.54.0 |
 | Realtime | Django Channels | 4.3.2 |
 | Database | SQLite | 3.54.0 |
 | Torrent engine | qBittorrent-nox | 5.3.0 (WebAPI 2.16.2) |
@@ -39,10 +39,10 @@ Node.js **20.19+** or **22.12+**.
 
 ```mermaid
 flowchart LR
-    Client["iPhone / laptop / tablet<br/>LAN browser"] -->|HTTP :8000| Daphne
+    Client["iPhone / laptop / tablet<br/>LAN browser"] -->|HTTP :8000| Uvicorn
 
-    subgraph Django["Django process (Daphne + ASGI)"]
-        Daphne --> Middleware["LAN host + security<br/>middleware"]
+    subgraph Django["Django process (Uvicorn + ASGI)"]
+        Uvicorn --> Middleware["LAN host + security<br/>middleware"]
         Middleware --> Views["DRF views + Django views"]
         Views --> ORM["Django ORM"]
         Views --> EngineClient["qbittorrent-api client"]
@@ -55,7 +55,7 @@ flowchart LR
     Qbit -->|BitTorrent :6881| Swarm["BitTorrent swarm"]
     Qbit --> Storage[("storage/downloads")]
     Files --> Storage
-    Daphne -->|serves hashed assets| Dist["frontend/dist"]
+    Uvicorn -->|serves hashed assets| Dist["frontend/dist"]
 ```
 
 The browser never talks to qBittorrent directly. Django validates the request,
@@ -69,7 +69,7 @@ React client.
 | `Django` | Routing, auth, sessions, ORM, admin, security middleware |
 | `djangorestframework` | JSON API used by the React client |
 | `channels` | WebSocket consumer for live transfer snapshots |
-| `daphne` | ASGI server that runs Django and Channels together |
+| `uvicorn` | ASGI server with response flow control, so large downloads do not buffer in memory |
 | `qbittorrent-api` | Typed-ish client for the isolated qBittorrent Web API |
 | `django-cors-headers` | Optional Vite dev-server CORS support |
 | `whitenoise` | Serves the built React assets directly from Django |
@@ -111,7 +111,7 @@ git; `./scripts/setup.sh` (or `npm run build`) creates the bundle.
 
 - **qBittorrent-nox 5.3.0** runs under a private profile at `.qbittorrent/` with
   its Web UI bound to `127.0.0.1:8081`. The default BitTorrent port is `6881`.
-- **Daphne** binds to `0.0.0.0:8000` so phones on the trusted LAN can connect.
+- **Uvicorn** binds to `0.0.0.0:8000` so phones on the trusted LAN can connect.
 - **systemd user services** (`seedstation.target`, `seedstation-web.service`,
   `seedstation-qbittorrent.service`, `seedstation-mdns.service`) keep the stack
   alive across logout and reboot. `loginctl enable-linger` is required for

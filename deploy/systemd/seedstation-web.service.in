@@ -1,5 +1,5 @@
 [Unit]
-Description=SeedStation web application (Daphne + Django)
+Description=SeedStation web application (Uvicorn + Django)
 After=network-online.target seedstation-qbittorrent.service
 Wants=network-online.target
 PartOf=seedstation.target
@@ -10,7 +10,7 @@ WorkingDirectory=@ROOT@/backend
 EnvironmentFile=@ROOT@/.env
 Environment=PYTHONUNBUFFERED=1
 ExecStartPre="@VENV@/bin/python" manage.py migrate --noinput
-ExecStart="@VENV@/bin/daphne" -b 0.0.0.0 -p @PORT@ config.asgi:application
+ExecStart="@VENV@/bin/uvicorn" config.asgi:application --host 0.0.0.0 --port @PORT@ --ws websockets-sansio
 Restart=always
 RestartSec=3
 KillSignal=SIGTERM

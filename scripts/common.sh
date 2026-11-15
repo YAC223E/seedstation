@@ -10,7 +10,7 @@ RUN_DIR="$ROOT/.run"
 VENV="$ROOT/.venv"
 QBIT_PROFILE="$ROOT/.qbittorrent"
 QBIT_BINARY="$ROOT/tools/qbittorrent-nox"
-DAPHNE_PID_FILE="$RUN_DIR/daphne.pid"
+WEB_PID_FILE="$RUN_DIR/web.pid"
 QBIT_PID_FILE="$RUN_DIR/qbittorrent.pid"
 
 if [ -t 1 ]; then

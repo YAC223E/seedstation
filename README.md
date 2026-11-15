@@ -79,7 +79,7 @@ good on a phone at 2 a.m.
           │  HTTP :8000 (trusted LAN)
           ▼
  ┌──────────────────────────────────────────────┐
- │ Daphne → Django + DRF + Channels + WhiteNoise│
+ │ Uvicorn → Django + DRF + Channels + WhiteNoise│
  │  React build served from frontend/dist       │
  │  SQLite: backend/instance/seedstation.sqlite3│
  └───────────────────┬──────────────────────────┘
@@ -100,7 +100,7 @@ A deeper breakdown is in [`docs/TECH_STACK.md`](docs/TECH_STACK.md).
 
 | Layer | Choice |
 | --- | --- |
-| Backend | Python 3.12+, Django 6.1, Django REST Framework, Channels, Daphne |
+| Backend | Python 3.12+, Django 6.1, Django REST Framework, Channels, Uvicorn |
 | Database | SQLite |
 | Engine | qBittorrent-nox 5.x via `qbittorrent-api`, loopback Web UI |
 | Frontend | React 19, TypeScript 7, Vite 8, Tailwind CSS 4 |
@@ -134,7 +134,7 @@ sudo pacman -S python nodejs npm qbittorrent-nox avahi
 git clone https://github.com/YAC223E/seedstation.git
 cd seedstation
 ./scripts/setup.sh       # venv, frontend build, database, admin, engine profile
-./scripts/start.sh       # starts the engine, then Daphne
+./scripts/start.sh       # starts the engine, then Uvicorn
 ./scripts/status.sh
 ```
 
@@ -192,13 +192,13 @@ a current promise.
 | Command | Purpose |
 | --- | --- |
 | `./scripts/setup.sh` | Creates `.env` with random secrets (if missing), installs Python deps, builds the frontend, migrates SQLite, creates the admin, makes the qBittorrent profile. Idempotent; never overwrites an existing `.env`. |
-| `./scripts/start.sh` | Runs migrations, starts the isolated engine on `127.0.0.1:8081`, applies saved speed/queue settings, starts Daphne on `0.0.0.0:8000`, and waits for health checks. |
+| `./scripts/start.sh` | Runs migrations, starts the isolated engine on `127.0.0.1:8081`, applies saved speed/queue settings, starts Uvicorn on `0.0.0.0:8000`, and waits for health checks. |
 | `./scripts/stop.sh` | Stops only SeedStation's engine and web server after verifying their PID command lines. Never touches another qBittorrent process. |
 | `./scripts/status.sh` | Shows health, PIDs, LAN URL, mDNS URL, disk space, and warns when a qBittorrent WebUI is listening on a non-loopback address. |
 | `./scripts/install-systemd.sh` | Optional: installs systemd **user** units and starts them. |
 | `./scripts/install-systemd.sh --remove` | Removes the units, keeps data and `.env`. |
 
-Logs live in `.run/daphne.log` and `.run/qbittorrent.log`; PID files are in
+Logs live in `.run/uvicorn.log` and `.run/qbittorrent.log`; PID files are in
 `.run/`. The scripts refuse to act on stale PIDs or a foreign process.
 
 ### Persistent systemd user services
@@ -213,7 +213,7 @@ journalctl --user -u seedstation-web -u seedstation-qbittorrent -u seedstation-m
 The installer creates:
 
 - `seedstation.target` — groups the stack
-- `seedstation-web.service` — Daphne + Django
+- `seedstation-web.service` — Uvicorn + Django
 - `seedstation-qbittorrent.service` — isolated engine
 - `seedstation-mdns.service` — stable `seedstation.local` alias
 
@@ -234,7 +234,7 @@ Configuration lives in `.env` at the project root (created by setup, mode 600).
 | Key | Default | Notes |
 | --- | --- | --- |
 | `SEEDSTATION_SECRET_KEY` | generated | Required Django secret. Changing it invalidates sessions. |
-| `SEEDSTATION_PORT` | `8000` | Django/Daphne port. |
+| `SEEDSTATION_PORT` | `8000` | Django/Uvicorn port. |
 | `SEEDSTATION_MDNS_NAME` | `seedstation.local` | Stable mDNS alias published by `seedstation-mdns.service`. |
 | `SEEDSTATION_TIME_ZONE` | system timezone | Used by Django and timestamps. |
 | `SEEDSTATION_ALLOWED_HOSTS` | localhost only | Extra Host header names; loopback, private IPs and `*.local` are already allowed. |
@@ -492,6 +492,6 @@ Released under the [MIT License](LICENSE).
 ## Acknowledgements
 
 SeedStation stands on the shoulders of qBittorrent, Django, Django REST
-Framework, Channels, Daphne, React, Vite, Tailwind CSS, Radix UI, TanStack Query,
+Framework, Channels, Uvicorn, React, Vite, Tailwind CSS, Radix UI, TanStack Query,
 Recharts, Lucide, Sonner, and the Fontsource project. Thanks to the maintainers
 and communities behind them.

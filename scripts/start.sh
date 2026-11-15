@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start SeedStation's isolated qBittorrent engine and the Django/Daphne web app.
+# Start SeedStation's isolated qBittorrent engine and the Django/Uvicorn web app.
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -66,32 +66,32 @@ if ! (cd "$ROOT/backend" && "$VENV/bin/python" manage.py sync_engine); then
     warn "Could not synchronize qBittorrent preferences; the web app will still start."
 fi
 
-# --- Daphne ---------------------------------------------------------------
-if pid_alive "$DAPHNE_PID_FILE"; then
-    dpid="$(read_pid "$DAPHNE_PID_FILE")"
+# --- Uvicorn --------------------------------------------------------------
+if pid_alive "$WEB_PID_FILE"; then
+    dpid="$(read_pid "$WEB_PID_FILE")"
     if pid_matches "$dpid" "config.asgi:application"; then
-        ok "Daphne already running (PID $dpid)."
+        ok "SeedStation web server already running (PID $dpid)."
     else
-        die "PID file $DAPHNE_PID_FILE points to PID $dpid, which is not SeedStation's web server.
+        die "PID file $WEB_PID_FILE points to PID $dpid, which is not SeedStation's web server.
 Remove the stale PID file and retry."
     fi
 else
-    rm -f "$DAPHNE_PID_FILE"
+    rm -f "$WEB_PID_FILE"
     if port_in_use "$PORT"; then
         die "Port $PORT is already in use. Stop that service or change SEEDSTATION_PORT."
     fi
-    log "Starting Daphne on 0.0.0.0:$PORT..."
+    log "Starting the web server on 0.0.0.0:$PORT..."
     cd "$ROOT/backend"
-    nohup "$VENV/bin/daphne" -b 0.0.0.0 -p "$PORT" config.asgi:application \
-        >>"$RUN_DIR/daphne.log" 2>&1 &
+    nohup "$VENV/bin/uvicorn" config.asgi:application --host 0.0.0.0 --port "$PORT" \
+        --ws websockets-sansio >>"$RUN_DIR/uvicorn.log" 2>&1 &
     dpid=$!
     cd "$ROOT"
-    echo "$dpid" >"$DAPHNE_PID_FILE"
+    echo "$dpid" >"$WEB_PID_FILE"
     if ! wait_for_http "http://127.0.0.1:$PORT/api/health/" 30; then
-        tail_log "$RUN_DIR/daphne.log"
+        tail_log "$RUN_DIR/uvicorn.log"
         kill "$dpid" 2>/dev/null || true
-        rm -f "$DAPHNE_PID_FILE"
-        die "Daphne did not become healthy. Check $RUN_DIR/daphne.log."
+        rm -f "$WEB_PID_FILE"
+        die "The web server did not become healthy. Check $RUN_DIR/uvicorn.log."
     fi
     ok "SeedStation is healthy (PID $dpid)."
 fi
@@ -103,6 +103,6 @@ if [ -n "$IP" ]; then
     printf '  Network: http://%s:%s\n' "$IP" "$PORT"
 fi
 printf '  Engine:  http://127.0.0.1:%s (loopback only)\n' "$QBIT_PORT"
-printf '  Logs:    %s\n' "$RUN_DIR/daphne.log"
+printf '  Logs:    %s\n' "$RUN_DIR/uvicorn.log"
 printf '           %s\n' "$RUN_DIR/qbittorrent.log"
 printf '  Stop:    ./scripts/stop.sh\n'

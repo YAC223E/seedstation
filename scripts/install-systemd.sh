@@ -43,7 +43,7 @@ require_executable "$VENV/bin/python" || die "Run ./scripts/setup.sh first."
 require_file "$ROOT/frontend/dist/index.html" || die "Run ./scripts/setup.sh first."
 QBIT_BIN="$(find_qbit_binary)" || die "qbittorrent-nox not found."
 
-if pid_alive "$DAPHNE_PID_FILE" || pid_alive "$QBIT_PID_FILE"; then
+if pid_alive "$WEB_PID_FILE" || pid_alive "$QBIT_PID_FILE"; then
     die "SeedStation is running from ./scripts/start.sh. Run ./scripts/stop.sh first,
 then install the systemd units. This avoids two engines fighting over the same ports."
 fi

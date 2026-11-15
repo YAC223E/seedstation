@@ -22,7 +22,7 @@ from apps.core.paths import (
 )
 from apps.core.server import disk_stats
 
-from .streaming import content_disposition, file_stream_response
+from .streaming import async_byte_stream, content_disposition, file_stream_response
 
 logger = logging.getLogger(__name__)
 
@@ -302,7 +302,7 @@ class ArchiveView(APIView):
                 {"detail": "That folder could not be archived.", "code": "archive_failed"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        response = StreamingHttpResponse(stream, content_type="application/zip")
+        response = StreamingHttpResponse(async_byte_stream(stream), content_type="application/zip")
         response["Content-Disposition"] = content_disposition(_zip_name(path), inline=False)
         response["Cache-Control"] = "no-store"
         response["X-Content-Type-Options"] = "nosniff"

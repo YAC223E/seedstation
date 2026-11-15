@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import mimetypes
 import os
 import re
@@ -65,6 +66,21 @@ def _iter_file(path: Path, start: int, length: int):
                 break
             remaining -= len(chunk)
             yield chunk
+
+
+async def async_byte_stream(iterable):
+    """Yield bytes from a sync iterator without materializing it in memory.
+
+    Django's ASGI handler converts a plain sync iterator into a list, which
+    makes the server hold an entire file in RAM. An async iterator keeps the
+    transfer streaming, so a slow phone only costs a few chunks of memory.
+    """
+    iterator = iter(iterable)
+    while True:
+        chunk = await asyncio.to_thread(next, iterator, None)
+        if chunk is None:
+            break
+        yield chunk
 
 
 def _parse_range(header: str, size: int) -> tuple[int, int] | None:
@@ -170,7 +186,7 @@ def file_stream_response(request, path: Path, *, inline: bool = False) -> HttpRe
         return response
 
     response = StreamingHttpResponse(
-        _iter_file(path, start, length),
+        async_byte_stream(_iter_file(path, start, length)),
         status=status_code,
         content_type=content_type,
     )

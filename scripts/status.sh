@@ -15,8 +15,8 @@ FAILED=0
 
 web_pid=""
 qbit_pid=""
-if pid_alive "$DAPHNE_PID_FILE"; then
-    candidate="$(read_pid "$DAPHNE_PID_FILE")"
+if pid_alive "$WEB_PID_FILE"; then
+    candidate="$(read_pid "$WEB_PID_FILE")"
     pid_matches "$candidate" "config.asgi:application" && web_pid="$candidate"
 fi
 if pid_alive "$QBIT_PID_FILE"; then

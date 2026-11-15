@@ -7,9 +7,36 @@ import zipfile
 from pathlib import Path
 
 import pytest
+from asgiref.sync import async_to_sync
 from django.test import Client
 
+from apps.files.streaming import async_byte_stream
+
 pytestmark = pytest.mark.django_db
+
+
+def collect_stream(response):
+    async def collect():
+        return b"".join([chunk async for chunk in response.streaming_content])
+
+    return async_to_sync(collect)()
+
+
+def test_async_byte_stream_is_lazy():
+    """Django's ASGI handler must not materialize a whole file into a list."""
+    consumed = []
+
+    def chunks():
+        for index in range(5):
+            consumed.append(index)
+            yield bytes([index])
+
+    async def first_chunk():
+        async for chunk in async_byte_stream(chunks()):
+            return chunk
+
+    assert async_to_sync(first_chunk)() == b"\x00"
+    assert consumed == [0]
 
 
 def make_files(root: Path):
@@ -75,7 +102,7 @@ def test_range_request(auth_client, download_root):
     assert response.status_code == 206
     assert response["Content-Range"] == f"bytes 10-19/{media.stat().st_size}"
     assert response["Accept-Ranges"] == "bytes"
-    assert b"".join(response.streaming_content) == bytes(range(10, 20))
+    assert collect_stream(response) == bytes(range(10, 20))
 
 
 def test_suffix_range(auth_client, download_root):
@@ -85,7 +112,7 @@ def test_suffix_range(auth_client, download_root):
         "/api/files/download/", {"path": str(path)}, HTTP_RANGE="bytes=-3"
     )
     assert response.status_code == 206
-    assert b"".join(response.streaming_content) == b"hij"
+    assert collect_stream(response) == b"hij"
 
 
 def test_invalid_range(auth_client, download_root):
@@ -137,7 +164,7 @@ def test_zip_archive_streams(auth_client, download_root):
     response = auth_client.get("/api/files/archive/", {"path": str(download_root / "Show")})
     assert response.status_code == 200
     assert response["Content-Type"] == "application/zip"
-    body = b"".join(response.streaming_content)
+    body = collect_stream(response)
     archive = zipfile.ZipFile(io.BytesIO(body))
     names = archive.namelist()
     assert "Show/episode one.mp4" in names
